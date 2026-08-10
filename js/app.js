@@ -561,7 +561,7 @@
 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", config.appsScriptUrl);
-        xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+        xhr.setRequestHeader("Content-Type", "text/plain");
         xhr.timeout = 180000;
 
         xhr.upload.onprogress = function (event) {
