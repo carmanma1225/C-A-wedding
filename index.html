@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Carman and Anthony wedding guest photo and video uploader">
+  <title>分享你的照片 | Carman &amp; Anthony</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231a1a19'/%3E%3Ctext x='50' y='64' font-family='Arial' font-size='36' fill='white' text-anchor='middle'%3EC%26A%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/config.js" defer></script>
+  <script src="js/i18n.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#uploader" data-i18n="skipLink">跳至上傳器</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <p class="site-header__names">Carman <span class="names-amp" aria-hidden="true">&amp;</span> Anthony</p>
+      <p class="site-header__date" id="event-date" data-i18n="eventDate">2026年12月24日</p>
+
+      <div class="site-header__actions">
+        <a
+          class="album-link"
+          id="album-link"
+          href="https://drive.google.com/drive/folders/1c2x4INo6cnXt7BmPD0m6lBkwipHya6qj?usp=sharing"
+          target="_blank"
+          rel="noopener"
+          data-i18n="albumLink"
+        >Google Drive 相簿</a>
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button class="lang-toggle__button is-active" type="button" data-lang="zh-Hant" aria-pressed="true">繁中</button>
+          <button class="lang-toggle__button" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+
+      <p class="drive-status" id="drive-status" hidden>
+        <span class="drive-status__dot" id="drive-status-dot" aria-hidden="true"></span>
+        <span id="drive-status-text" data-i18n="driveConnected">Drive 已連接</span>
+      </p>
+    </div>
+  </header>
+
+  <section class="photo-strip" aria-label="Carman and Anthony">
+    <img src="assets/photos/carman-anthony-1.jpg" alt="" aria-hidden="true">
+    <img src="assets/photos/carman-anthony-2.jpg" alt="" aria-hidden="true">
+    <img src="assets/photos/carman-anthony-3.jpg" alt="" aria-hidden="true">
+    <img src="assets/photos/carman-anthony-4.jpg" alt="" aria-hidden="true">
+  </section>
+
+  <main class="uploader" id="uploader">
+    <div class="setup-banner" id="setup-banner" hidden>
+      <strong data-i18n="setupBannerStrong">Google Drive 尚未連接。</strong>
+      <span data-i18n="setupBannerText">請開啟 README.md，並將 Apps Script 網址貼到 js/config.js。</span>
+    </div>
+
+    <section class="uploader__intro" aria-labelledby="uploader-title">
+      <p class="uploader__kicker" data-i18n="kicker">來賓照片與影片收集</p>
+      <h2 id="uploader-title" data-i18n="heading">分享你眼中的我們</h2>
+      <p class="uploader__copy" data-i18n="intro">把你在我們婚禮當天拍下的照片和短片分享給我們。</p>
+    </section>
+
+    <section class="upload-panel" aria-label="Photo and video uploader">
+      <label class="dropzone" id="dropzone" data-i18n-aria-label="dropzoneLabel">
+        <input
+          class="visually-hidden"
+          id="file-input"
+          type="file"
+          accept="image/*,video/*"
+          multiple
+          aria-describedby="file-summary"
+        >
+        <span class="dropzone__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+            <path d="M12 12v9"/>
+            <path d="m16 16-4-4-4 4"/>
+          </svg>
+        </span>
+        <span class="dropzone__title" data-i18n="dropzoneTitle">新增照片及影片</span>
+        <span class="dropzone__hint" data-i18n="dropzoneHint">或將檔案拖曳到這裡</span>
+        <span class="dropzone__meta" id="file-summary" data-i18n="noFiles">尚未新增檔案</span>
+      </label>
+
+      <div class="guest-details">
+        <label class="field" for="guest-name">
+          <span class="field__label" data-i18n="guestName">你的名字</span>
+          <input id="guest-name" name="guestName" type="text" maxlength="80" autocomplete="name" data-i18n-placeholder="optional">
+        </label>
+        <label class="field" for="guest-note">
+          <span class="field__label" data-i18n="guestNote">留言給我們</span>
+          <textarea id="guest-note" name="guestNote" maxlength="500" rows="3" data-i18n-placeholder="optional"></textarea>
+        </label>
+      </div>
+
+      <section class="queue-section" id="queue-section" aria-labelledby="queue-heading" hidden>
+        <div class="queue-section__head">
+          <h2 id="queue-heading" data-i18n="queueHeading">你的檔案</h2>
+          <p class="queue-section__count" id="queue-count"></p>
+        </div>
+        <ul class="file-queue" id="file-queue"></ul>
+      </section>
+
+      <div class="upload-actions">
+        <button class="button button--primary" id="upload-button" type="button" disabled data-i18n="uploadButton">
+          上傳至 Google Drive
+        </button>
+        <button class="button button--ghost" id="clear-button" type="button" hidden data-i18n="clearAll">
+          全部清除
+        </button>
+      </div>
+
+      <div class="status-region" id="status-region" role="status" aria-live="polite" hidden></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p data-i18n="footerLove">滿載愛意，Carman &amp; Anthony</p>
+    <p data-i18n="footerDrive">上傳內容會直接存入我們的 Google Drive。</p>
+  </footer>
+</body>
+</html>
