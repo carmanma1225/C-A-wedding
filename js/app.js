@@ -404,8 +404,8 @@
       label = t("statusPreparing");
       working = true;
     } else if (item.status === "uploading") {
-      progress = item.progress;
-      label = t("statusUploading", { progress: progress });
+      progress = item.progress || 10;
+      label = item.progress > 0 ? t("statusUploading", { progress: progress }) : t("statusUploadingText");
       statusClass = "status--working";
       working = true;
     } else if (item.status === "done") {
@@ -559,42 +559,48 @@
           note: meta.note
         };
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", config.appsScriptUrl);
-        xhr.setRequestHeader("Content-Type", "text/plain");
-        xhr.timeout = 180000;
+        item.status = "uploading";
+        item.progress = 0;
+        updateItemUI(item);
 
-        xhr.upload.onprogress = function (event) {
-          if (!event.lengthComputable) return;
-          item.status = "uploading";
-          item.progress = Math.round((event.loaded / event.total) * 100);
-          updateItemUI(item);
-        };
-
-        xhr.onload = function () {
-          var data;
-          try {
-            data = JSON.parse(xhr.responseText);
-          } catch (error) {
-            reject(new Error(t("invalidResponse")));
-            return;
-          }
-          if (data && data.ok) {
-            resolve(data);
-          } else {
-            reject(new Error((data && data.error) || t("rejected")));
-          }
-        };
-
-        xhr.onerror = function () {
-          reject(new Error(t("networkError")));
-        };
-
-        xhr.ontimeout = function () {
+        var controller = new AbortController();
+        var timer = setTimeout(function () {
+          controller.abort();
           reject(new Error(t("timeoutError")));
-        };
+        }, 180000);
 
-        xhr.send(JSON.stringify(payload));
+        fetch(config.appsScriptUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        })
+          .then(function (response) {
+            return response.text();
+          })
+          .then(function (text) {
+            clearTimeout(timer);
+            var data;
+            try {
+              data = JSON.parse(text);
+            } catch (error) {
+              reject(new Error(t("invalidResponse")));
+              return;
+            }
+            if (data && data.ok) {
+              resolve(data);
+            } else {
+              reject(new Error((data && data.error) || t("rejected")));
+            }
+          })
+          .catch(function (error) {
+            clearTimeout(timer);
+            if (error && error.name === "AbortError") {
+              reject(new Error(t("timeoutError")));
+            } else {
+              reject(new Error(t("networkError")));
+            }
+          });
       };
 
       reader.readAsDataURL(item.file);
