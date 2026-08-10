@@ -537,7 +537,11 @@
     } else if (succeeded > 0) {
       showStatus(t("savedMixed", { saved: succeeded, failed: failed }), "info", true);
     } else {
-      showStatus(t("savedNone"), "error", true);
+      var failedItems = state.items.filter(function (item) {
+        return item.status === "error";
+      });
+      var firstError = failedItems.length > 0 ? failedItems[0].error : "";
+      showStatus(firstError || t("savedNone"), "error", true);
     }
   }
 
