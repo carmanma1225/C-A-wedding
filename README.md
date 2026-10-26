@@ -83,9 +83,21 @@ upload directly to the folder instead.
 
 ## How uploads are stored
 
-Each file is saved with a timestamp prefix, for example
-`20261224-183000_IMG_1234.MOV`. If a guest adds a name or note, a small
-`.metadata.json` file is created next to the upload with that information.
+Each file is numbered inside the Drive folder:
+
+- `photo 1_Carman.jpg`
+- `photo 2_Carman.png`
+- `video 1_Anthony.mp4`
+
+If the guest leaves the name blank, the file is saved without a name suffix,
+for example `photo 3.jpg`. Numbering is shared across the folder so files stay
+in order even when several guests upload.
+
+If a guest adds a name or note, a small `.metadata.json` file is created next
+to the upload with that information.
+
+After changing `apps-script/Code.gs`, create a **new version** under
+**Deploy > Manage deployments** so the public website uses the updated code.
 
 Only share the website link with your guests. Anyone who has the link can
 upload to the connected folder.

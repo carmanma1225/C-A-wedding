@@ -455,6 +455,34 @@ body {
   background: var(--warm);
 }
 
+.file-row__progress--active .file-row__bar {
+  width: 100% !important;
+  background: linear-gradient(
+    90deg,
+    #f2d9d9 0%,
+    var(--accent) 45%,
+    #f2d9d9 100%
+  );
+  background-size: 220% 100%;
+  animation: upload-shimmer 1.15s linear infinite;
+}
+
+@keyframes upload-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-row__progress--active .file-row__bar {
+    animation: none;
+    background: var(--accent);
+  }
+}
+
 .file-row__status {
   font-size: 0.8rem;
   font-weight: 700;

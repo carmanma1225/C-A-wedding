@@ -1,23 +1,41 @@
 /**
- * Wedding guest photo & video collector.
+ * Carman & Anthony wedding photo & video collector.
  *
  * The website sends base64-encoded files to this web app, which saves them
- * into the Google Drive folder below.
+ * into the Google Drive folder below using names such as:
+ *   photo 1_Carman.jpg
+ *   video 1_Anthony.mp4
  *
- * Deployment steps (also in README.md):
- * 1. Create a Google Drive folder for uploads and copy its folder ID.
- * 2. Open script.google.com, create a new project, and paste this file
- *    into Code.gs.
- * 3. Set FOLDER_ID below.
- * 4. Deploy > New deployment > Web app.
- *    - Execute as: Me
- *    - Who has access: Anyone
- * 5. Copy the web app URL into js/config.js as appsScriptUrl.
+ * After changing this file, redeploy the Apps Script web app with a new
+ * version so the public website uses the updated code.
  */
 
-var FOLDER_ID = "1c2x4INo6cnXt7BmPD0m6lBkwipHya6qj"; // Carman & Anthony guest uploads
-
+var FOLDER_ID = "1c2x4INo6cnXt7BmPD0m6lBkwipHya6qj";
 var MAX_FILE_BYTES = 25 * 1024 * 1024;
+
+var VIDEO_EXTENSIONS = {
+  "3gp": true,
+  "avi": true,
+  "m4v": true,
+  "mkv": true,
+  "mov": true,
+  "mp4": true,
+  "webm": true
+};
+
+var MIME_EXTENSIONS = {
+  "image/avif": "avif",
+  "image/gif": "gif",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "video/3gpp": "3gp",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm"
+};
 
 function doPost(e) {
   var body;
@@ -40,56 +58,101 @@ function doPost(e) {
       throw new Error("File is too large for this uploader.");
     }
 
-    var mimeType = String(body.mimeType || "application/octet-stream").slice(0, 120);
-    var fileName = sanitizeFileName(body.fileName || "guest-upload");
-    var stamp = Utilities.formatDate(
-      new Date(),
-      Session.getScriptTimeZone(),
-      "yyyyMMdd-HHmmss"
-    );
-    fileName = stamp + "_" + fileName;
-
-    var bytes = Utilities.base64Decode(base64);
-    var blob = Utilities.newBlob(bytes, mimeType, fileName);
-    var folder = DriveApp.getFolderById(FOLDER_ID);
-    var file = folder.createFile(blob);
-
-    var name = cleanText(body.name, 80);
+    var mimeType = cleanText(body.mimeType || "application/octet-stream", 120);
+    var originalName = cleanText(body.fileName || "guest-upload", 180);
+    var guestName = sanitizeGuestName(body.name);
     var note = cleanText(body.note, 1000);
+    var bytes = Utilities.base64Decode(base64);
 
-    if (name || note) {
-      var meta = {
-        fileName: file.getName(),
-        uploadedAt: new Date().toISOString(),
-        name: name,
-        note: note
-      };
-      var metaBlob = Utilities.newBlob(
-        JSON.stringify(meta, null, 2),
-        "application/json",
-        file.getName() + ".metadata.json"
-      );
-      folder.createFile(metaBlob);
+    var lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+    try {
+      var folder = DriveApp.getFolderById(FOLDER_ID);
+      var file = saveFile(folder, bytes, mimeType, originalName, guestName, note);
+      return respond({ ok: true, id: file.getId(), name: file.getName() });
+    } finally {
+      lock.releaseLock();
     }
-
-    return respond({ ok: true, id: file.getId(), name: file.getName() });
   } catch (err) {
     return respond({ ok: false, error: String(err) });
   }
 }
 
-function doGet() {
-  return respond({ ok: true, app: "wedding-upload-collector" });
+function saveFile(folder, bytes, mimeType, originalName, guestName, note) {
+  var kind = getMediaKind(mimeType, originalName);
+  var prefix = kind === "video" ? "video" : "photo";
+  var number = getNextFileNumber(folder, prefix);
+  var extension = getFileExtension(originalName, mimeType, kind);
+  var namePart = guestName ? "_" + guestName : "";
+  var finalName = prefix + " " + number + namePart + "." + extension;
+
+  var blob = Utilities.newBlob(bytes, mimeType, finalName);
+  var file = folder.createFile(blob);
+
+  if (guestName || note) {
+    var meta = {
+      fileName: file.getName(),
+      originalFileName: originalName,
+      kind: kind,
+      number: number,
+      uploadedAt: new Date().toISOString(),
+      name: guestName,
+      note: note
+    };
+    folder.createFile(
+      Utilities.newBlob(
+        JSON.stringify(meta, null, 2),
+        "application/json",
+        file.getName() + ".metadata.json"
+      )
+    );
+  }
+
+  return file;
 }
 
-function sanitizeFileName(name) {
-  var cleaned = String(name)
-    .replace(/[\\/]/g, "_")
+function getNextFileNumber(folder, prefix) {
+  var highest = 0;
+  var files = folder.getFiles();
+  var pattern = new RegExp("^" + prefix + " (\\d+)(?:_|\\.)");
+
+  while (files.hasNext()) {
+    var match = files.next().getName().match(pattern);
+    if (match) {
+      highest = Math.max(highest, Number(match[1]));
+    }
+  }
+
+  return highest + 1;
+}
+
+function getMediaKind(mimeType, fileName) {
+  if (/^video\//i.test(mimeType)) {
+    return "video";
+  }
+  return VIDEO_EXTENSIONS[getRawExtension(fileName)] ? "video" : "photo";
+}
+
+function getFileExtension(fileName, mimeType, kind) {
+  var existing = getRawExtension(fileName);
+  if (existing) {
+    return existing === "jpeg" ? "jpg" : existing;
+  }
+  return MIME_EXTENSIONS[String(mimeType).toLowerCase()] || (kind === "video" ? "mp4" : "jpg");
+}
+
+function getRawExtension(fileName) {
+  var match = String(fileName || "").match(/\.([A-Za-z0-9]{1,8})$/);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function sanitizeGuestName(name) {
+  return cleanText(name, 80)
+    .replace(/[\\/:*?"<>|]/g, "")
     .replace(/[\u0000-\u001f\u007f]/g, "")
-    .trim()
     .replace(/\s+/g, " ")
-    .slice(0, 180);
-  return cleaned || "guest-upload";
+    .trim()
+    .slice(0, 50);
 }
 
 function cleanText(value, maxLength) {

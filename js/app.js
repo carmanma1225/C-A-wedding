@@ -422,6 +422,10 @@
 
     barEl.style.width = progress + "%";
     barEl.classList.toggle("file-row__bar--working", working);
+    progressWrap.classList.toggle(
+      "file-row__progress--active",
+      item.status === "preparing" || item.status === "uploading"
+    );
     statusEl.textContent = label;
     statusEl.className = statusClass;
     progressWrap.setAttribute("aria-valuenow", String(progress));
