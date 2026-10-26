@@ -574,11 +574,23 @@
         };
 
         item.status = "uploading";
-        item.progress = 0;
+        item.progress = 6;
         updateItemUI(item);
+
+        var progressStartedAt = Date.now();
+        var estimatedDuration = Math.min(
+          5000,
+          Math.max(1200, (item.file.size / (1024 * 1024)) * 700)
+        );
+        var progressTimer = setInterval(function () {
+          var elapsed = Date.now() - progressStartedAt;
+          item.progress = Math.min(92, Math.round((elapsed / estimatedDuration) * 92));
+          updateItemUI(item);
+        }, 120);
 
         var controller = new AbortController();
         var timer = setTimeout(function () {
+          clearInterval(progressTimer);
           controller.abort();
           reject(new Error(t("timeoutError")));
         }, 180000);
@@ -594,6 +606,7 @@
           })
           .then(function (text) {
             clearTimeout(timer);
+            clearInterval(progressTimer);
             var data;
             try {
               data = JSON.parse(text);
@@ -609,6 +622,7 @@
           })
           .catch(function (error) {
             clearTimeout(timer);
+            clearInterval(progressTimer);
             if (error && error.name === "AbortError") {
               reject(new Error(t("timeoutError")));
             } else {

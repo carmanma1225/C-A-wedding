@@ -456,7 +456,6 @@ body {
 }
 
 .file-row__progress--active .file-row__bar {
-  width: 100% !important;
   background: linear-gradient(
     90deg,
     #f2d9d9 0%,
