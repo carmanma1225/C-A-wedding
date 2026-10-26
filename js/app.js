@@ -481,6 +481,13 @@
 
   function uploadAll() {
     if (state.uploading) return;
+    var meta = getGuestMeta();
+    if (!meta.name) {
+      showStatus(t("nameRequired"), "error", false);
+      els.guestName.focus();
+      return;
+    }
+
     var pending = state.items.filter(function (item) {
       return item.status === "pending" || item.status === "error";
     });
@@ -489,7 +496,6 @@
     state.uploading = true;
     updateButtons();
 
-    var meta = getGuestMeta();
     var succeeded = 0;
     var attempts = pending.length;
 

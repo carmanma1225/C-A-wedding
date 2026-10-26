@@ -89,12 +89,12 @@ Each file is numbered inside the Drive folder:
 - `photo 2_Carman.png`
 - `video 1_Anthony.mp4`
 
-If the guest leaves the name blank, the file is saved without a name suffix,
-for example `photo 3.jpg`. Numbering is shared across the folder so files stay
-in order even when several guests upload.
+The guest name is required and is included in every uploaded file name.
+Numbering is shared across the folder so files stay in order even when several
+guests upload.
 
-If a guest adds a name or note, a small `.metadata.json` file is created next
-to the upload with that information.
+If a guest adds a note, a small `.metadata.json` file is created next to the
+upload with the guest name and note.
 
 After changing `apps-script/Code.gs`, create a **new version** under
 **Deploy > Manage deployments** so the public website uses the updated code.

@@ -61,6 +61,9 @@ function doPost(e) {
     var mimeType = cleanText(body.mimeType || "application/octet-stream", 120);
     var originalName = cleanText(body.fileName || "guest-upload", 180);
     var guestName = sanitizeGuestName(body.name);
+    if (!guestName) {
+      throw new Error("Guest name is required.");
+    }
     var note = cleanText(body.note, 1000);
     var bytes = Utilities.base64Decode(base64);
 
@@ -83,8 +86,7 @@ function saveFile(folder, bytes, mimeType, originalName, guestName, note) {
   var prefix = kind === "video" ? "video" : "photo";
   var number = getNextFileNumber(folder, prefix);
   var extension = getFileExtension(originalName, mimeType, kind);
-  var namePart = guestName ? "_" + guestName : "";
-  var finalName = prefix + " " + number + namePart + "." + extension;
+  var finalName = prefix + " " + number + "_" + guestName + "." + extension;
 
   var blob = Utilities.newBlob(bytes, mimeType, finalName);
   var file = folder.createFile(blob);
