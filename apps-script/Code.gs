@@ -91,7 +91,7 @@ function saveFile(folder, bytes, mimeType, originalName, guestName, note) {
   var blob = Utilities.newBlob(bytes, mimeType, finalName);
   var file = folder.createFile(blob);
 
-  if (guestName || note) {
+  if (note) {
     var meta = {
       fileName: file.getName(),
       originalFileName: originalName,
